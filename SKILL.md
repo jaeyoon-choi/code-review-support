@@ -1,6 +1,6 @@
 ---
 name: code-review-support
-description: Use when the user asks to review, explain, or translate a Gerrit change (a fuchsia-review.googlesource.com URL, a CL number, or "이 CL 리뷰해줘"), or to re-review a CL after the author uploaded a new patchset, especially a change that bundles several fixes into one commit and is hard to follow.
+description: Use when the user asks to review, explain, or translate a Gerrit change (a fuchsia-review.googlesource.com URL, a CL number, or "이 CL 리뷰해줘"), or to re-review a CL after the author uploaded a new patchset, especially a change that bundles several fixes into one commit and is hard to follow. Also use it to review or explain the commits of a local git branch or commit range, such as the user's own branch before a pull request ("이 브랜치 커밋들 리뷰해줘", "커밋별로 설명해줘", "origin/main..HEAD 리뷰"), even when no Gerrit is involved.
 ---
 
 # CL Review Support
@@ -14,6 +14,11 @@ test coverage, problems, and ready-to-paste comments. Reference tables go to
 the appendix. Every behavioral claim is checked against the full base code, and
 every quote is checked by a script before the file is reported done.
 
+For commits on a local branch instead of a Gerrit change, read
+`references/branch-mode.md` first. It keeps this workflow but fetches each
+commit into its own folder, because a line number only means something in the
+commit that produced it.
+
 Paths used below:
 
 | Name | Path |
@@ -24,6 +29,9 @@ Paths used below:
 | `<work>` | a fresh folder in the session scratchpad |
 
 ## Step 1: Fetch the change
+
+For a local branch, use `scripts/fetch_range.py` as described in
+`references/branch-mode.md` and continue at Step 2.
 
 Run inside a local clone of the change's project (for a Fuchsia CL, your Fuchsia checkout).
 First look for an earlier review of the same CL: `ls <dir>/*-<number>-ps*.md`.
@@ -241,9 +249,13 @@ spaces become `-`. Example: `## 단위 1: init 리스` becomes `#단위-1-init-�
 ## Step 4: Check and record
 
 1. Run the quote checker and fix every problem it prints, then rerun until it
-   reports `0 problem(s)`:
+   reports `0 problem(s)`. Besides checking that quoted lines exist, it flags a
+   `+` or `-` line that the change does not actually add or remove, which is
+   how an unchanged line copied into a diff block gets caught.
    ```bash
    python3 ~/.claude/skills/code-review-support/scripts/check_refs.py <file> <work> <repo>
+   # branch mode: checks each unit against its own commit
+   python3 ~/.claude/skills/code-review-support/scripts/check_units.py <file> <work> <repo>
    ```
 2. Add to `<context>` every fact verified in this review that a later review
    would need: framework semantics, spec rules, hardware facts, commit that
@@ -262,6 +274,8 @@ spaces become `-`. Example: `## 단위 1: init 리스` becomes `#단위-1-init-�
 | "새 패치셋 올라왔어" / re-review | Steps 1-4 with `--since <old ps>`, new file for the new patchset |
 | "왜 고친 거야?" | Expand each unit's 문제 상황 in the existing file, then summarize |
 | "코멘트 올려줘" | Show the 추천 코멘트 blocks and ask before posting anything |
+| "이 브랜치 커밋들 리뷰해줘" / "커밋별로 설명해줘" | Branch mode (`references/branch-mode.md`), Steps 2-4 |
+| Branch changed since the last review | Branch mode with `git range-diff`, fill 이전 리뷰 대비 |
 
 ## Common Mistakes
 
@@ -277,3 +291,5 @@ spaces become `-`. Example: `## 단위 1: init 리스` becomes `#단위-1-init-�
 | A reviewer's point retold as your own analysis | Tag it `(리뷰 코멘트: ...)` where it appears |
 | Retyping reviewer comments, or putting them in a text block | Use `comments_md.py`; quotes wrap, code blocks scroll |
 | Posting comments to Gerrit | Never post. 추천 코멘트 is for the user to paste |
+| Marking an unchanged or moved line `+` | Copy the markers from the real diff (checker flags it) |
+| Branch review line numbers from the range end | Use the unit's own commit; appendix tables under `#### 단위 N` |

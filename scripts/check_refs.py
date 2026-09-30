@@ -8,6 +8,8 @@ Checks, against the base/ and new/ files written by fetch_cl.sh:
     change are looked up in the base commit when git-repo-dir is given.
   * in every ```diff block, `+` lines exist in the new file, `-` lines exist in
     the base file, and context lines exist in either, near the cited line
+  * when change.patch is present, a `+` line is one the change adds and a `-`
+    line is one it removes, so an unchanged or moved line is not marked as new
 A diff line that is exactly "..." (optionally indented) marks elided code and is
 skipped. Anything else that is not real code is reported.
 Exit status is 1 when a problem is found.
@@ -30,6 +32,27 @@ def load(path):
 
 def norm(s):
     return " ".join(s.split())
+
+
+def patch_lines(path):
+    """Added and removed lines per new-side file path, from a unified diff."""
+    added, removed = {}, {}
+    if not path.exists():
+        return None
+    cur = old = None
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        if line.startswith("--- "):
+            old = line[6:] if line.startswith("--- a/") else None
+        elif line.startswith("+++ "):
+            # A deleted file has no new side; key its removed lines by the old path.
+            cur = line[6:] if line.startswith("+++ b/") else old
+        elif line.startswith("diff --git"):
+            cur = old = None
+        elif cur and line.startswith("+"):
+            added.setdefault(cur, set()).add(norm(line[1:]))
+        elif cur and line.startswith("-"):
+            removed.setdefault(cur, set()).add(norm(line[1:]))
+    return added, removed
 
 
 def main():
@@ -59,6 +82,7 @@ def main():
         return None if 1 <= lo and hi <= n else f"ref `{name}:{lo}-{hi}`: beyond end of {hits[0]} ({n} lines)"
     text = review.read_text(encoding="utf-8")
     problems = []
+    changed = patch_lines(work / "change.patch")
 
     def resolve(name):
         if name in files:
@@ -108,15 +132,19 @@ def main():
             return None
 
         for raw in lines[1:]:
-            if not raw.strip():
+            if not raw.strip() or raw.strip() == "...":
                 continue
             sign, body = raw[0], norm(raw[1:])
             if body == "..." or not body:
                 continue
             if sign == "+":
                 why = found(new, body, new_at)
+                if why is None and changed and body not in changed[0].get(path, ()):
+                    why = "marked added, but this change does not add it (context line?)"
             elif sign == "-":
                 why = found(base, body, base_at)
+                if why is None and changed and body not in changed[1].get(path, ()):
+                    why = "marked removed, but this change does not remove it (context line?)"
             elif sign == " ":
                 a, b = found(new, body, new_at), found(base, body, base_at)
                 why = None if a is None or b is None else a

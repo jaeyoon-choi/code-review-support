@@ -17,6 +17,10 @@ For each change it writes one markdown file with:
 On a new patchset it compares against the previous review and tracks which
 earlier findings were fixed.
 
+It also reviews the commits of a local git branch or commit range (for example
+your own branch before a pull request). Each commit becomes one unit, checked
+against its own parent. See `references/branch-mode.md`.
+
 ## Install
 
 ```bash
@@ -37,6 +41,9 @@ In Claude Code, from inside the project checkout:
 A bare change number assumes fuchsia-review.googlesource.com. Asking in plain
 language ("이 CL 리뷰해줘") also triggers the skill.
 
+For a branch, ask in plain language, for example "origin/main..HEAD 커밋들
+리뷰해줘". Branch reviews are saved as `<date>-<branch>-<head sha>.md`.
+
 Reviews are saved to
 `${CODE_REVIEW_SUPPORT_DIR:-~/Documents/Claude/CodeReviewSupport}/<project>/<date>-<change>-ps<patchset>.md`.
 The skill also keeps `<project>/_context.md` there, a list of facts verified in
@@ -52,7 +59,9 @@ Other markdown viewers show them as plain quotes.
 |---|---|
 | `scripts/fetch_cl.sh` | Download change metadata, patch, and comment threads through the Gerrit REST API, fetch the commits, and extract full base/new files. `--since N` also writes a diff against patchset N |
 | `scripts/comments_md.py` | Render existing comment threads as callout boxes with originals quoted verbatim and translation placeholders |
-| `scripts/check_refs.py` | Check that every `path:line` reference and every line in a diff block of the review matches the real code |
+| `scripts/check_refs.py` | Check that every `path:line` reference and every line in a diff block of the review matches the real code, and that `+`/`-` lines are really added or removed by the change |
+| `scripts/fetch_range.py` | Write one work folder per commit of a local range, plus one for the whole range, and warn when an author email is missing from the Signed-off-by trailers |
+| `scripts/check_units.py` | Check a branch review, running `check_refs.py` on each unit against its own commit |
 
 The skill never posts anything to Gerrit. Suggested comments are for you to
 review and paste.

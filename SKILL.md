@@ -9,8 +9,8 @@ description: Use when the user asks to review, explain, or translate a Gerrit ch
 
 Produce one Korean markdown review file for a Gerrit change. It opens with a
 verdict table, then the commit message, then one chapter per fix unit that
-holds everything about that unit in reading order: what went wrong, the diff,
-test coverage, problems, and ready-to-paste comments. Reference tables go to
+holds everything about that unit in reading order: what went wrong, how the
+change fixes it, the diff, test coverage, problems, and ready-to-paste comments. Reference tables go to
 the appendix. Every behavioral claim is checked against the full base code, and
 every quote is checked by a script before the file is reported done.
 
@@ -191,8 +191,16 @@ finding they belong to (see 문제점 below), not here.>
 ## 단위 N: <noun-phrase title>
 
 ### 문제 상황
-<Numbered sequence of concrete events in the base code. Then the CL's approach
-in 1-3 sentences. Paragraphs at most 3 sentences.>
+<Numbered sequence of concrete events in the base code. Only the problem.
+Paragraphs at most 3 sentences.>
+
+### 해결 방법
+<Prose, 1-3 short paragraphs, before any diff. Say what the change does to
+the sequence above, why this approach and not the obvious alternative, and
+how its pieces depend on each other (which part is useless without which).
+Name the precedent when there is one (another driver, a framework rule).
+No bullets and no code here: the reader should be able to predict the diff
+from this section.>
 
 ### 변경 코드
 <One ```diff block per important hunk. First line is a comment with
@@ -272,7 +280,7 @@ spaces become `-`. Example: `## 단위 1: init 리스` becomes `#단위-1-init-�
 | "번역만" | Step 1, then print the original and translated commit message |
 | "리뷰해줘" / URL only | Steps 1-4 |
 | "새 패치셋 올라왔어" / re-review | Steps 1-4 with `--since <old ps>`, new file for the new patchset |
-| "왜 고친 거야?" | Expand each unit's 문제 상황 in the existing file, then summarize |
+| "왜 고친 거야?" | Expand each unit's 문제 상황 and 해결 방법 in the existing file, then summarize |
 | "코멘트 올려줘" | Show the 추천 코멘트 blocks and ask before posting anything |
 | "이 브랜치 커밋들 리뷰해줘" / "커밋별로 설명해줘" | Branch mode (`references/branch-mode.md`), Steps 2-4 |
 | Branch changed since the last review | Branch mode with `git range-diff`, fill 이전 리뷰 대비 |
@@ -282,6 +290,7 @@ spaces become `-`. Example: `## 단위 1: init 리스` becomes `#단위-1-init-�
 | Mistake | Fix |
 |---|---|
 | Explaining the diff hunk by hunk | Group hunks by fix unit first |
+| Jumping from 문제 상황 straight into diff blocks | Write 해결 방법 in prose first, so the diff only confirms it |
 | Summary lines inside a diff block | Real code only, `...` for elision (checker enforces) |
 | Calling a stall a deadlock | Trace who completes each wait (rule 5) |
 | Assuming numeric values carry ordering | Read the framework contract (rule 6) |

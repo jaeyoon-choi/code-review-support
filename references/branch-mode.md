@@ -54,7 +54,7 @@ same branch, look for `<dir>/*-<branch>-*.md`, and describe what moved with
 - 판정 요약 gets a 커밋 column.
 - Each unit chapter opens with one sentence naming its commit, then
   `### 커밋 메시지` with the original in a ```text block and a Korean
-  translation, then 문제 상황, 변경 코드, 테스트, 문제점. There is no separate
+  translation, then 문제 상황, 해결 방법, 변경 코드, 테스트, 문제점. There is no separate
   커밋 메시지 원문과 번역 chapter.
 - Drop 기존 리뷰 코멘트 and 전체 답글과 투표 unless a pull request already has
   comments. If it does, place each one under its finding with

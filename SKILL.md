@@ -78,6 +78,11 @@ These rules exist because skipping them produced wrong reviews.
 6. **Read the framework's own contract** (FIDL, header docs) before reasoning
    about how it interprets values, ordering, or threading.
 7. **Check every commit message claim against the diff and base code.**
+7a. **Write for a reader who has not read the code.** The person reading the
+   review knows the product but not this subsystem's internals. Before using a
+   type, field, lock or state name in an argument, say in one sentence what it
+   is and what it is for. A finding that only makes sense to someone who
+   already read the diff has failed, however correct it is.
 8. **For a regression, find the commit that introduced it** with
    `git log -S'<symbol>' -- <path>` and quote its hash and date.
 9. **Hardware or spec claims need a source**: spec section, Linux driver
@@ -133,7 +138,7 @@ Scale the shape to the change:
 - 패치셋: <ps>, 베이스: `<base short hash>`
 - 링크: <url>
 
-**목차:** [판정 요약](#판정-요약) · [커밋 메시지](#커밋-메시지-원문과-번역) · [기존 리뷰 코멘트](#기존-리뷰-코멘트) · [단위 1](#<anchor>) · ... · [전체 답글과 투표](#전체-답글과-투표) · [부록](#부록)
+**목차:** [판정 요약](#판정-요약) · [커밋 메시지](#커밋-메시지-원문과-번역) · [기존 리뷰 코멘트](#기존-리뷰-코멘트) · [전체 그림](#<anchor>) · [단위 1](#<anchor>) · ... · [전체 답글과 투표](#전체-답글과-투표) · [부록](#부록)
 
 **출처 표시:** `(리뷰 코멘트: 작성자, 위치, 상태)`가 붙은 내용은 다른 리뷰어의 코멘트에서 온 것이다. "직접 확인"이 함께 붙으면 코멘트를 보고 코드나 문서로 따로 확인했다는 뜻이다. 표시가 없는 내용은 이 리뷰의 분석이다.
 
@@ -188,6 +193,21 @@ finding they belong to (see 문제점 below), not here.>
 
 ---
 
+## 전체 그림: <noun-phrase>
+
+<Only when the change introduces or reshapes a subsystem the reader does not
+already hold in their head (a new protocol layer, a new power sequence, a new
+queueing scheme). Skip it for a change that only fixes existing code.
+
+Open with the scale in numbers and the one sentence that follows from it. Then
+how the pieces fit: which file or component owns what, as a table. Then one
+concrete end-to-end walk with real values (an actual LBA, an actual byte
+offset, an actual register write), naming which part does each step. Close with
+a table of what this change covers and what is left for later changes, so the
+reader knows the limits of what the review could check.>
+
+---
+
 ## 단위 N: <noun-phrase title>
 
 ### 문제 상황
@@ -214,18 +234,65 @@ Bullets after each block explain what the changed lines do.>
 ### 문제점
 <Omit when the unit has no findings. Each finding:>
 
-**<one-line claim> (<수정 필요 | 확인 필요 | 사소함>, <신규 | 리뷰 코멘트: author, path:line, 미해결 | 해결됨>)**
+**<결과>: <원인> (<수정 필요 | 확인 필요 | 사소함>, <신규 | 리뷰 코멘트: author, path:line, 미해결 | 해결됨>)**
 
-- 위치: `path:line`
-- 근거: <spec section, base code, Linux behavior, vendor DT>
-- 실패 시나리오: <concrete sequence>
+- 위치: `path:line` (`function()`)
+
+**배경 N: <one-sentence noun phrase>** <Only when the mechanism needs a
+prerequisite the reader does not have. One short paragraph each, numbered, in
+dependency order, each introducing exactly one thing (what a slot is, what the
+field tracks, who clears it and when). Put the line reference in trailing
+parentheses. Stop as soon as the next paragraph can stand on its own: two or
+three of these, never a tutorial.>
+
+**그래서 생기는 일.** <The defect itself, now that the reader has the pieces.
+Plain sentences, no new names.>
+
+**실패 시나리오.** <A table in time order, one row per event, with a last
+column showing the state that matters (a mask, a flag, a level). A numbered
+list is fine when there is no state to track, but the table is clearer
+whenever one value explains the whole thing.>
+
+| 시각 | 사건 | <state> |
+|---|---|---|
+
+**수정과 그 자리가 안전한 이유.** <The fix, short enough to quote, then why
+that spot is safe, with the evidence in trailing parentheses. When an obvious
+alternative fix exists (move the check, reorder two calls, widen a lock), say
+why it does not work: a reviewer will propose it otherwise, and the answer is
+often that some other code already depends on the current shape.>
+
+<Title: keep it to "결과: 원인", short enough to read at a glance, e.g.
+`서스펜드 실패: 타임아웃 슬롯이 드레인 전에 정리되지 않음`. Never pack the
+whole mechanism into the title. Do not cram the reasoning into one long
+bullet: split it across 무엇이 / 왜 / 실패 순서 / 수정 방법.>
 
 <If an existing thread raised or discusses this finding, paste its block here.>
 
 > [!tip] 추천 코멘트 · `path:line`
-> <English Gerrit comment, short, polite, ending with a question or concrete
+> <English Gerrit comment, polite, ending with a question or concrete
 > suggestion. For an open thread another reviewer started, a one-line +1 with
-> only the new information. Otherwise "없음." with the reason.>
+> only the new information. Otherwise "없음." with the reason.
+>
+> Two sentences: the symptom and the ask. Three when the cause needs one of
+> its own, four only when a rejected alternative has to be pre-empted. No code
+> block unless the fix is one line, and no semicolons. The evidence, the
+> mechanism and the rejected alternatives stay in the document above: the
+> author reads them if they ask "why?".
+>
+> Lead with the symptom the author cares about, not with the internals. Anchor
+> the comment on the line that is wrong rather than the top of the function,
+> and when a comment in the code claims the behavior that does not happen,
+> point at that comment: it is shorter than the call graph and the author
+> cannot read it twice without seeing the gap.
+>
+> Spend one sentence pre-empting the fix a reader would propose instead, when
+> there is one, since that is the reply you would otherwise have to write
+> anyway. But leave out any detail that invites a counter-argument you would
+> then have to answer, such as an exception that holds only sometimes or a
+> caller that could in theory run. State the claim instead of the enumeration
+> ("and nothing else runs it here" rather than listing the other callers) and
+> keep the nuance in the document for when the author raises it.>
 
 ---
 
@@ -291,6 +358,11 @@ spaces become `-`. Example: `## 단위 1: init 리스` becomes `#단위-1-init-�
 |---|---|
 | Explaining the diff hunk by hunk | Group hunks by fix unit first |
 | Jumping from 문제 상황 straight into diff blocks | Write 해결 방법 in prose first, so the diff only confirms it |
+| A finding only a reader of the diff can follow | Add 배경 paragraphs for the prerequisites, then state the defect (rule 7a) |
+| 실패 시나리오 as prose when one value drives it | Use the timeline table with a state column |
+| Leaving the obvious alternative fix unaddressed | Say why it fails; some other code often depends on the current order |
+| Enumerating callers or cases in a comment | State the claim; an enumeration invites "but that one does run" |
+| Anchoring a comment at the top of the function | Anchor on the wrong line, and on a stale code comment when there is one |
 | Summary lines inside a diff block | Real code only, `...` for elision (checker enforces) |
 | Calling a stall a deadlock | Trace who completes each wait (rule 5) |
 | Assuming numeric values carry ordering | Read the framework contract (rule 6) |
@@ -301,4 +373,5 @@ spaces become `-`. Example: `## 단위 1: init 리스` becomes `#단위-1-init-�
 | Retyping reviewer comments, or putting them in a text block | Use `comments_md.py`; quotes wrap, code blocks scroll |
 | Posting comments to Gerrit | Never post. 추천 코멘트 is for the user to paste |
 | Marking an unchanged or moved line `+` | Copy the markers from the real diff (checker flags it) |
+| A finding title that tells the whole story, or one 근거 bullet holding every reason and line number | Title is `결과: 원인`. Split the body into 무엇이 / 왜 / 실패 순서 (numbered) / 수정 방법, and push identifiers and line numbers to trailing parentheses |
 | Branch review line numbers from the range end | Use the unit's own commit; appendix tables under `#### 단위 N` |

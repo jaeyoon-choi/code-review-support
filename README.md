@@ -12,6 +12,7 @@ For each change it writes one markdown file with:
 - one chapter per fix unit: what went wrong in the base code, the diff, what the
   tests cover and miss, the problems found, the reviewer threads about each
   problem (original and translation), and a ready-to-paste English comment
+  with its Korean translation
 - an appendix with file/line maps, per-function flow, and a glossary
 
 On a new patchset it compares against the previous review and tracks which

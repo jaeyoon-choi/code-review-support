@@ -112,7 +112,11 @@ originals, and never drop the cut marks into the file.
 **Boxes.** Comments use Obsidian callouts, which other markdown viewers show
 as plain quotes: other reviewers' threads are `> [!quote]+` boxes (from
 comments_md.py), and this review's own comments and reply draft are
-`> [!tip]` boxes. Leave a blank line before and after every box.
+`> [!tip]` boxes. Leave a blank line before and after every box. Every
+English comment or reply in a `[!tip]` box ends, inside the same box, with a
+blank `>` line and `> **번역:** <Korean>`: a translation in polite speech
+(존댓말) that keeps identifiers and code as-is, so the user can read what
+they are about to paste. A "없음." box needs no translation.
 
 **Attribute every point taken from a review comment, where it appears.** Any
 fact, judgment, spec citation, failure scenario, or proposal that came from an
@@ -293,6 +297,8 @@ bullet: split it across 무엇이 / 왜 / 실패 순서 / 수정 방법.>
 > caller that could in theory run. State the claim instead of the enumeration
 > ("and nothing else runs it here" rather than listing the other callers) and
 > keep the nuance in the document for when the author raises it.>
+>
+> **번역:** <Korean translation of the comment above, 존댓말, identifiers as-is.>
 
 ---
 
@@ -303,7 +309,8 @@ bullet: split it across 무엇이 / 왜 / 실패 순서 / 수정 방법.>
 
 ## 전체 답글과 투표
 <Patchset-level threads from comments_md.py, then the reply draft as
-`> [!tip] 우리 답글 초안` with the English reply inside, then 추천 투표 with reason.>
+`> [!tip] 우리 답글 초안` with the English reply and its `**번역:**` line
+inside, then 추천 투표 with reason.>
 
 ---
 
@@ -372,6 +379,7 @@ spaces become `-`. Example: `## 단위 1: init 리스` becomes `#단위-1-init-�
 | A reviewer's point retold as your own analysis | Tag it `(리뷰 코멘트: ...)` where it appears |
 | Retyping reviewer comments, or putting them in a text block | Use `comments_md.py`; quotes wrap, code blocks scroll |
 | Posting comments to Gerrit | Never post. 추천 코멘트 is for the user to paste |
+| An English 추천 코멘트 or 우리 답글 초안 without a Korean translation | Add `> **번역:** ...` inside the same box (see Boxes) |
 | Marking an unchanged or moved line `+` | Copy the markers from the real diff (checker flags it) |
 | A finding title that tells the whole story, or one 근거 bullet holding every reason and line number | Title is `결과: 원인`. Split the body into 무엇이 / 왜 / 실패 순서 (numbered) / 수정 방법, and push identifiers and line numbers to trailing parentheses |
 | Branch review line numbers from the range end | Use the unit's own commit; appendix tables under `#### 단위 N` |

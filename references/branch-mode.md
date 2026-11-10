@@ -62,7 +62,8 @@ same branch, look for `<dir>/*-<branch>-*.md`, and describe what moved with
 - 커밋 메시지 부정확 also covers metadata: the author-email warnings, and
   trailers that differ from the target branch (compare with
   `git log <base> --format=%B`).
-- 추천 코멘트 stay in English, ready for a pull request. On the user's own
+- 추천 코멘트 stay in English, ready for a pull request, each followed by its
+  `> **번역:**` line as in SKILL.md (Boxes). On the user's own
   branch they double as a to-do list.
 
 ## Verifying a branch

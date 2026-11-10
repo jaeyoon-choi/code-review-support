@@ -125,6 +125,16 @@ in the same sentence or bullet. If you verified it yourself afterwards, add
 `(직접 확인: <source>)`. Text without a tag must be this review's own analysis.
 Never restate a reviewer's point in prose without the tag, even in 문제 상황.
 
+**Write plainly.** The reader wants to know what the CL does and what to say
+about it. Open 판정 요약 with what the change does in everyday words (what
+the device or driver did before and does after), not with identifiers. Explain
+each term in a short phrase where it first appears. Keep 문제 상황 to three or
+four steps, 해결 방법 to two or three short paragraphs, 배경 to one paragraph
+per finding, and 실패 시나리오 to three or four rows. Show only the diff blocks
+that carry the change. Leave out how the change was fetched, alternatives
+nobody would propose, and spec cross-references that do not change the
+verdict.
+
 Scale the shape to the change:
 
 | Change | Shape |
@@ -246,8 +256,8 @@ Bullets after each block explain what the changed lines do.>
 prerequisite the reader does not have. One short paragraph each, numbered, in
 dependency order, each introducing exactly one thing (what a slot is, what the
 field tracks, who clears it and when). Put the line reference in trailing
-parentheses. Stop as soon as the next paragraph can stand on its own: two or
-three of these, never a tutorial.>
+parentheses. Stop as soon as the next paragraph can stand on its own: usually
+one, at most two, never a tutorial.>
 
 **그래서 생기는 일.** <The defect itself, now that the reader has the pieces.
 Plain sentences, no new names.>
@@ -344,8 +354,9 @@ spaces become `-`. Example: `## 단위 1: init 리스` becomes `#단위-1-init-�
    introduced a behavior, reviewer ownership. One bullet each with its source
    and `확인: CL <number>`. If a fact turned out wrong, correct it in place and
    mark it 정정. Create `<context>` with a one-paragraph header if missing.
-3. Reply in the terminal with the file path, the one-line verdict, and the top
-   two findings. Do not paste the whole review.
+3. Reply in the terminal with the file path, the verdict in plain words (what
+   the CL does and the vote), and at most the top two findings with their
+   comments. Keep it to a few short lines. Do not paste the whole review.
 
 ## Quick Reference
 
@@ -364,6 +375,7 @@ spaces become `-`. Example: `## 단위 1: init 리스` becomes `#단위-1-init-�
 | Mistake | Fix |
 |---|---|
 | Explaining the diff hunk by hunk | Group hunks by fix unit first |
+| A summary full of identifiers and side detail | Lead with what the CL does in everyday words and cut detail that does not change the verdict (Write plainly) |
 | Jumping from 문제 상황 straight into diff blocks | Write 해결 방법 in prose first, so the diff only confirms it |
 | A finding only a reader of the diff can follow | Add 배경 paragraphs for the prerequisites, then state the defect (rule 7a) |
 | 실패 시나리오 as prose when one value drives it | Use the timeline table with a state column |

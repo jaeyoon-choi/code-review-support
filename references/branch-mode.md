@@ -42,8 +42,9 @@ same branch, look for `<dir>/*-<branch>-*.md`, and describe what moved with
 - If one commit bundles several fixes, keep one chapter for it and number the
   fixes inside 문제 상황 and 변경 코드. Whether it should be split is a finding.
 - Inside a unit, every line number is that commit's new side, and `(base N)` in
-  a diff header is its parent. Anything outside the unit chapters (verdict,
-  the 기존 리뷰 코멘트 table) uses the range end, `<work>/all`.
+  a diff header is its parent. Appendix tables for a unit go under a
+  `#### 단위 N` heading so they are checked against the same folder. Anything
+  else (verdict, cross-unit flow tables) uses the range end, `<work>/all`.
 
 ## Template changes
 
@@ -53,14 +54,10 @@ same branch, look for `<dir>/*-<branch>-*.md`, and describe what moved with
 - 판정 요약 gets a 커밋 column.
 - Each unit chapter opens with one sentence naming its commit, then
   `### 커밋 메시지` with the original in a ```text block and a Korean
-  translation, then the compact or full chapter from SKILL.md (변경 요약, or
-  문제 상황 through 문제점). There is no separate 커밋 메시지 원문과 번역
-  chapter. The commit message and its translation do not count toward the
-  unit's prose budget.
+  translation, then 문제 상황, 해결 방법, 변경 코드, 테스트, 문제점. There is no separate
+  커밋 메시지 원문과 번역 chapter.
 - Drop 기존 리뷰 코멘트 and 전체 답글과 투표 unless a pull request already has
-  comments. If it does, the rule in SKILL.md holds: a resolved thread is one
-  row of the table with where its fix landed, and only an unresolved thread is
-  quoted, under its finding, with
+  comments. If it does, place each one under its finding with
   `(리뷰 코멘트: author, path:line, 미해결 | 해결됨)`.
 - 커밋 메시지 부정확 also covers metadata: the author-email warnings, and
   trailers that differ from the target branch (compare with
@@ -75,10 +72,9 @@ same branch, look for `<dir>/*-<branch>-*.md`, and describe what moved with
   against the range end. A later commit in the same range often changes what an
   earlier message describes.
 - A branch review is often written for the author, who wants to know what was
-  actually exercised. Say once, in 판정 요약, what ran on real hardware, what
-  ran only in CI or as a mock, and what was checked only by reading source. A
-  unit's 확인 line repeats it only where that unit differs.
-- Look at the project's CI (for example `.github/workflows/`) to learn what it
+  actually exercised. In 테스트, say separately what ran on real hardware, what
+  ran only as a mock, and what was checked only by reading source.
+- Look at the project's CI (for example `.github/workflows/`) and say what it
   runs and what it cannot see.
 
 ## Step 4: check
@@ -89,4 +85,3 @@ python3 ~/.claude/skills/code-review-support/scripts/check_units.py <file> <work
 
 It splits the file at the unit headings and runs check_refs.py on each part
 with the matching folder. Fix every problem and rerun until `0 problem(s)`.
-Then run `check_len.py <file>` as in SKILL.md Step 4.

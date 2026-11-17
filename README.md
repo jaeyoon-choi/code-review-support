@@ -8,14 +8,12 @@ For each change it writes one markdown file with:
 
 - a verdict table, one row per fix unit
 - the original commit message and a Korean translation
-- an index of existing reviewer threads, with resolved state and where each
-  resolved one was fixed
-- one chapter per fix unit, sized by its findings. A unit with no finding is
-  one paragraph. A unit with a real finding gets what went wrong in the base
-  code, the diff, what the tests cover and miss, the problem, the open
-  reviewer threads about it (original and translation), and a ready-to-paste
-  English comment with its Korean translation
-- a short list of what the review could not verify
+- an index of existing reviewer threads, with resolved state
+- one chapter per fix unit: what went wrong in the base code, the diff, what the
+  tests cover and miss, the problems found, the reviewer threads about each
+  problem (original and translation), and a ready-to-paste English comment
+  with its Korean translation
+- an appendix with file/line maps, per-function flow, and a glossary
 
 On a new patchset it compares against the previous review and tracks which
 earlier findings were fixed.
@@ -61,11 +59,10 @@ Other markdown viewers show them as plain quotes.
 | Script | Purpose |
 |---|---|
 | `scripts/fetch_cl.sh` | Download change metadata, patch, and comment threads through the Gerrit REST API, fetch the commits, and extract full base/new files. `--since N` also writes a diff against patchset N |
-| `scripts/comments_md.py` | Render existing comment threads as callout boxes with originals quoted verbatim and translation placeholders. `--open` prints only unresolved threads |
+| `scripts/comments_md.py` | Render existing comment threads as callout boxes with originals quoted verbatim and translation placeholders |
 | `scripts/check_refs.py` | Check that every `path:line` reference and every line in a diff block of the review matches the real code, and that `+`/`-` lines are really added or removed by the change |
 | `scripts/fetch_range.py` | Write one work folder per commit of a local range, plus one for the whole range, and warn when an author email is missing from the Signed-off-by trailers |
 | `scripts/check_units.py` | Check a branch review, running `check_refs.py` on each unit against its own commit |
-| `scripts/check_len.py` | Count each section's prose against the length budget, which follows the unit's findings |
 
 The skill never posts anything to Gerrit. Suggested comments are for you to
 review and paste.

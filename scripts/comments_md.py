@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 """Print one markdown block per existing review thread, originals quoted verbatim.
 
-Usage: python3 comments_md.py <work-dir> [--open]
-
-With --open, only unresolved threads are printed. A resolved thread is one row
-of the review's index table and is not quoted.
+Usage: python3 comments_md.py <work-dir>
 
 Reads existing_comments.txt written by fetch_cl.sh. Each block is an Obsidian
 callout box (`> [!quote]+`) titled with the location, authors, and status. Inside
@@ -46,8 +43,6 @@ def main():
     work = Path(sys.argv[1])
     threads = parse((work / "existing_comments.txt").read_text(encoding="utf-8"))
     # Open threads first, then by location.
-    if "--open" in sys.argv[2:]:
-        threads = [t for t in threads if t["status"] == "미해결"]
     threads.sort(key=lambda t: (t["status"] != "미해결", t["path"], t["line"]))
     for t in threads:
         name = t["path"].rsplit("/", 1)[-1] if t["path"] not in TITLE else None

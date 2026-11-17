@@ -362,7 +362,7 @@ spaces become `-`. Example: `## 단위 1: init 리스` becomes `#단위-1-init-�
 
 | User asks for | Do |
 |---|---|
-| "번역만" | Step 1, then print the original and translated commit message |
+| "번역만" | Step 1, then print the original and translated commit message. For a pull request, the PR description first, then each commit message |
 | "리뷰해줘" / URL only | Steps 1-4 |
 | "새 패치셋 올라왔어" / re-review | Steps 1-4 with `--since <old ps>`, new file for the new patchset |
 | "왜 고친 거야?" | Expand each unit's 문제 상황 and 해결 방법 in the existing file, then summarize |
@@ -391,6 +391,7 @@ spaces become `-`. Example: `## 단위 1: init 리스` becomes `#단위-1-init-�
 | A reviewer's point retold as your own analysis | Tag it `(리뷰 코멘트: ...)` where it appears |
 | Retyping reviewer comments, or putting them in a text block | Use `comments_md.py`; quotes wrap, code blocks scroll |
 | Posting comments to Gerrit | Never post. 추천 코멘트 is for the user to paste |
+| A pull request review with the commit messages translated but not the PR description | Add PR 설명 원문과 번역 (`references/branch-mode.md`) |
 | An English 추천 코멘트 or 우리 답글 초안 without a Korean translation | Add `> **번역:** ...` inside the same box (see Boxes) |
 | Marking an unchanged or moved line `+` | Copy the markers from the real diff (checker flags it) |
 | A finding title that tells the whole story, or one 근거 bullet holding every reason and line number | Title is `결과: 원인`. Split the body into 무엇이 / 왜 / 실패 순서 (numbered) / 수정 방법, and push identifiers and line numbers to trailing parentheses |

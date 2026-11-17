@@ -52,6 +52,13 @@ same branch, look for `<dir>/*-<branch>-*.md`, and describe what moved with
   and a branch or PR link when there is one. Right after it, one paragraph
   telling the reader that line numbers belong to each unit's commit.
 - 판정 요약 gets a 커밋 column.
+- When the range is a pull request, add `## PR 설명 원문과 번역` right after
+  판정 요약 (after 이전 리뷰 대비 when that exists). Get the text with
+  `gh pr view <number> --json title,body`. `### 원문` holds the title and the
+  description verbatim in a ```text block, and `### 번역` holds the Korean
+  translation, which keeps a table as a table and identifiers as-is. Check the
+  description's claims against the code as rule 7 does for a commit message.
+  This section has no prose budget.
 - Each unit chapter opens with one sentence naming its commit, then
   `### 커밋 메시지` with the original in a ```text block and a Korean
   translation, then 문제 상황, 해결 방법, 변경 코드, 테스트, 문제점. There is no separate

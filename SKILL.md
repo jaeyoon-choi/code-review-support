@@ -111,7 +111,8 @@ unit, and what gets written down is set by the unit's worst finding:
 | 확인 필요 or 수정 필요 | Full: 문제 상황, 해결 방법, 변경 코드, 테스트, 문제점 | 350 + 200 per such finding |
 
 Prose is the text outside code blocks, boxes, tables, headings and the commit
-message. 판정 요약 has 100 words of prose and 전체 그림 has 150.
+message. 판정 요약 has 100 words of prose, 전체 그림 has 150, and 확인하지
+못한 것 has 120.
 `check_len.py` (Step 4) counts each section against these numbers. A compact
 chapter has no diff block and no 문제 상황, 해결 방법 or 테스트 heading. What
 Step 2 verified but the chapter does not show stays in `<context>` when a later
@@ -178,7 +179,8 @@ Scale the shape to the change:
 ## 판정 요약
 
 <Two or three sentences: what the device or driver did before and does after,
-the suggested vote, and how many findings of each severity. Then:>
+the suggested vote, and how many findings of each severity. Branch mode adds
+one or two sentences on what was exercised. Then:>
 
 | 단위 | 내용 | 판정 | 핵심 이유 |
 |---|---|---|---|
@@ -246,8 +248,8 @@ and what is left for later changes.>
 <One paragraph, two to four sentences: what the base code did, what the change
 does instead, and the one design choice worth knowing.>
 
-- 확인: <one line: what was checked against the base code, which test covers
-  it, and what that test cannot observe>
+- 확인: <one line: what was checked against the base code, which test or CI
+  job covers it, and what that cannot observe>
 
 ### 문제점
 <Omit when the unit has no findings. Each 사소함 finding:>

@@ -17,7 +17,7 @@ import sys
 from pathlib import Path
 
 COMPACT, MINOR, FULL, MAJOR = 120, 100, 350, 200
-FIXED = {"판정 요약": 100, "전체 그림": 150}
+FIXED = {"판정 요약": 100, "전체 그림": 150, "확인하지 못한 것": 120}
 UNIT = re.compile(r"(단위 \d+|변경 내용)")
 FINDING = re.compile(r"^\*\*.*\((사소함|확인 필요|수정 필요)[,)]")
 FULL_ONLY = ("### 문제 상황", "### 해결 방법", "### 변경 코드", "### 테스트")

@@ -75,7 +75,7 @@ same branch, look for `<dir>/*-<branch>-*.md`, and describe what moved with
   against the range end. A later commit in the same range often changes what an
   earlier message describes.
 - A branch review is often written for the author, who wants to know what was
-  actually exercised. Say once, in 판정 요약, what ran on real hardware, what
+  actually exercised. Say once, in one or two sentences of 판정 요약, what ran on real hardware, what
   ran only in CI or as a mock, and what was checked only by reading source. A
   unit's 확인 line repeats it only where that unit differs.
 - Look at the project's CI (for example `.github/workflows/`) to learn what it

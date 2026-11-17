@@ -7,12 +7,14 @@ description: Use when the user asks to review, explain, or translate a Gerrit ch
 
 ## Overview
 
-Produce one Korean markdown review file for a Gerrit change. It opens with a
-verdict table, then the commit message, then one chapter per fix unit that
-holds everything about that unit in reading order: what went wrong, how the
-change fixes it, the diff, test coverage, problems, and ready-to-paste comments. Reference tables go to
-the appendix. Every behavioral claim is checked against the full base code, and
-every quote is checked by a script before the file is reported done.
+Produce one short Korean markdown review file for a Gerrit change. It opens
+with a verdict table, then the commit message, then one chapter per fix unit.
+A unit with no finding gets one paragraph. A unit with a real finding gets the
+full treatment in reading order: what went wrong, how the change fixes it, the
+diff, test coverage, problems, and ready-to-paste comments. Every behavioral
+claim is checked against the full base code whatever the chapter's length, and
+every quote and every section's length is checked by a script before the file
+is reported done.
 
 For commits on a local branch instead of a Gerrit change, read
 `references/branch-mode.md` first. It keeps this workflow but fetches each
@@ -98,16 +100,40 @@ side, before every `##` section. Inside a ```diff block every line must be
 real code from `base/` or `new/`. Mark elided code with a line that is exactly
 `...` and never write summaries such as `/* checks */` there.
 
-**Place each existing thread where it is discussed.** Run
-`python3 ~/.claude/skills/code-review-support/scripts/comments_md.py <work>`.
-It prints one block per thread, separated by `<!-- thread -->` cut marks. Put
-each block right under the finding it belongs to, before 추천 코멘트. Threads on
-`/COMMIT_MSG` go in 커밋 메시지 부정확, patchset-level threads go in 전체 답글과
-투표 before the reply draft, and a thread that matches no finding goes under the
-unit whose code it is on. Replace every `<번역>` with a Korean translation in
-polite speech (존댓말) that keeps identifiers, code, and list structure, and
-keep the `> ` prefix so the translation stays inside the box. Never retype the
-originals, and never drop the cut marks into the file.
+**Spend words where the findings are.** The reader wants the verdict, what
+each unit does, and what to say to the author. Step 2 runs in full for every
+unit, and what gets written down is set by the unit's worst finding:
+
+| Worst finding in the unit | Chapter | Prose budget |
+|---|---|---|
+| none | Compact: 변경 요약 | 120 words |
+| 사소함 | Compact: 변경 요약 and 문제점, one paragraph per finding | 120 + 100 per finding |
+| 확인 필요 or 수정 필요 | Full: 문제 상황, 해결 방법, 변경 코드, 테스트, 문제점 | 350 + 200 per such finding |
+
+Prose is the text outside code blocks, boxes, tables, headings and the commit
+message. 판정 요약 has 100 words of prose, 전체 그림 has 150, and 확인하지
+못한 것 has 120.
+`check_len.py` (Step 4) counts each section against these numbers. A compact
+chapter has no diff block and no 문제 상황, 해결 방법 or 테스트 heading. What
+Step 2 verified but the chapter does not show stays in `<context>` when a later
+review needs it, and nowhere otherwise.
+
+**Quote only open threads.** Run
+`python3 ~/.claude/skills/code-review-support/scripts/comments_md.py <work> --open`.
+It prints one block per unresolved thread, separated by `<!-- thread -->` cut
+marks. Put each block right under the finding it belongs to, before 추천
+코멘트. An open thread on `/COMMIT_MSG` goes in 커밋 메시지 부정확, an open
+patchset-level thread goes in 전체 답글과 투표 before the reply draft, and an
+open thread that matches no finding goes under the unit whose code it is on.
+Replace every `<번역>` with a Korean translation in polite speech (존댓말) that
+keeps identifiers, code, and list structure, and keep the `> ` prefix so the
+translation stays inside the box. Never retype the originals, and never drop
+the cut marks into the file.
+
+A resolved thread is one row of the 기존 리뷰 코멘트 table. Check that the
+final code carries the fix and write where in the 반영 column. When the code
+does not carry it, that is a finding: write it in the unit and quote the thread
+there (run `comments_md.py` without `--open` to get its block).
 
 **Boxes.** Comments use Obsidian callouts, which other markdown viewers show
 as plain quotes: other reviewers' threads are `> [!quote]+` boxes (from
@@ -125,23 +151,19 @@ in the same sentence or bullet. If you verified it yourself afterwards, add
 `(직접 확인: <source>)`. Text without a tag must be this review's own analysis.
 Never restate a reviewer's point in prose without the tag, even in 문제 상황.
 
-**Write plainly.** The reader wants to know what the CL does and what to say
-about it. Open 판정 요약 with what the change does in everyday words (what
-the device or driver did before and does after), not with identifiers. Explain
-each term in a short phrase where it first appears. Keep 문제 상황 to three or
-four steps, 해결 방법 to two or three short paragraphs, 배경 to one paragraph
-per finding, and 실패 시나리오 to three or four rows. Show only the diff blocks
-that carry the change. Leave out how the change was fetched, alternatives
-nobody would propose, and spec cross-references that do not change the
-verdict.
+**Write plainly.** Open 판정 요약 with what the change does in everyday words
+(what the device or driver did before and does after), not with identifiers.
+Explain each term in a short phrase where it first appears, since the file has
+no glossary. Leave out how the change was fetched, alternatives nobody would
+propose, and spec cross-references that do not change the verdict.
 
 Scale the shape to the change:
 
 | Change | Shape |
 |---|---|
-| 2 or more fix units | Full template below |
-| 1 fix unit | Drop 판정 요약 table (keep the verdict sentence), 목차, and 부록 흐름 표. Use `## 변경 내용` instead of `## 단위 1: ...` |
-| No comment threads yet | Drop 기존 리뷰 코멘트 and the 출처 표시 line |
+| 2 or more fix units | Template below |
+| 1 fix unit | Drop the 판정 요약 table (keep the sentences). Use `## 변경 내용` instead of `## 단위 1: ...`, with the same compact or full rule |
+| No comment threads yet | Drop 기존 리뷰 코멘트 |
 | Earlier review exists (`--since`) | Add `## 이전 리뷰 대비` right after 판정 요약 |
 
 ````markdown
@@ -152,18 +174,17 @@ Scale the shape to the change:
 - 패치셋: <ps>, 베이스: `<base short hash>`
 - 링크: <url>
 
-**목차:** [판정 요약](#판정-요약) · [커밋 메시지](#커밋-메시지-원문과-번역) · [기존 리뷰 코멘트](#기존-리뷰-코멘트) · [전체 그림](#<anchor>) · [단위 1](#<anchor>) · ... · [전체 답글과 투표](#전체-답글과-투표) · [부록](#부록)
-
-**출처 표시:** `(리뷰 코멘트: 작성자, 위치, 상태)`가 붙은 내용은 다른 리뷰어의 코멘트에서 온 것이다. "직접 확인"이 함께 붙으면 코멘트를 보고 코드나 문서로 따로 확인했다는 뜻이다. 표시가 없는 내용은 이 리뷰의 분석이다.
-
 ---
 
 ## 판정 요약
 
-<One or two sentences with the overall verdict and suggested vote. Then:>
+<Two or three sentences: what the device or driver did before and does after,
+the suggested vote, and how many findings of each severity. Branch mode adds
+one or two sentences on what was exercised. Then:>
 
 | 단위 | 내용 | 판정 | 핵심 이유 |
 |---|---|---|---|
+<내용 and 핵심 이유 are phrases of at most ten words each.>
 
 ---
 
@@ -197,13 +218,11 @@ Scale the shape to the change:
 <Omit when there are no comment threads. One sentence with thread and
 unresolved counts, then one row per thread from existing_comments.txt:>
 
-| 위치 | 작성자 | 상태 | 요지 | 이 문서에서 |
+| 위치 | 작성자 | 상태 | 요지 | 반영 |
 |---|---|---|---|---|
-<상태 is 미해결 / 해결됨. 이 문서에서 names the unit or section that covers it,
-or 참고만.>
-
-<The table is only an index. The originals and translations go next to the
-finding they belong to (see 문제점 below), not here.>
+<상태 is 미해결 / 해결됨. 요지 is one phrase. 반영 for a resolved thread is
+`반영됨 (path:line)` or `미반영 (단위 N)`. For an open thread it names the unit
+that quotes it.>
 
 ---
 
@@ -213,31 +232,59 @@ finding they belong to (see 문제점 below), not here.>
 already hold in their head (a new protocol layer, a new power sequence, a new
 queueing scheme). Skip it for a change that only fixes existing code.
 
-Open with the scale in numbers and the one sentence that follows from it. Then
-how the pieces fit: which file or component owns what, as a table. Then one
-concrete end-to-end walk with real values (an actual LBA, an actual byte
-offset, an actual register write), naming which part does each step. Close with
-a table of what this change covers and what is left for later changes, so the
-reader knows the limits of what the review could check.>
+One paragraph: the scale in numbers, which component owns what, and one
+end-to-end walk with real values (an actual LBA, an actual register write).
+Then one table, either the pieces and their owners or what this change covers
+and what is left for later changes.>
 
 ---
 
 ## 단위 N: <noun-phrase title>
 
+<COMPACT chapter: the unit has no finding, or only 사소함 findings.>
+
+### 변경 요약
+
+<One paragraph, two to four sentences: what the base code did, what the change
+does instead, and the one design choice worth knowing.>
+
+- 확인: <one line: what was checked against the base code, which test or CI
+  job covers it, and what that cannot observe>
+
+### 문제점
+<Omit when the unit has no findings. Each 사소함 finding:>
+
+**<결과>: <원인> (사소함, <신규 | 리뷰 코멘트: author, path:line, 미해결 | 해결됨>)**
+
+- 위치: `path:line` (`function()`)
+
+<One paragraph, two to four sentences: what happens and when, why it is only
+minor, and the fix.>
+
+> [!tip] 추천 코멘트 · `path:line`
+> <as in the full chapter below>
+
+---
+
+## 단위 N: <noun-phrase title>
+
+<FULL chapter: the unit has a 확인 필요 or 수정 필요 finding.>
+
 ### 문제 상황
-<Numbered sequence of concrete events in the base code. Only the problem.
-Paragraphs at most 3 sentences.>
+<Numbered sequence of three or four concrete events in the base code. Only the
+problem.>
 
 ### 해결 방법
-<Prose, 1-3 short paragraphs, before any diff. Say what the change does to
-the sequence above, why this approach and not the obvious alternative, and
+<Prose, one or two short paragraphs, before any diff. Say what the change does
+to the sequence above, why this approach and not the obvious alternative, and
 how its pieces depend on each other (which part is useless without which).
 Name the precedent when there is one (another driver, a framework rule).
 No bullets and no code here: the reader should be able to predict the diff
 from this section.>
 
 ### 변경 코드
-<One ```diff block per important hunk. First line is a comment with
+<One ```diff block for each hunk a finding refers to, and at most one more for
+the hunk that carries the change. First line is a comment with
 `path:new-side-line`, plus `(base N)` when the block only removes lines.
 Bullets after each block explain what the changed lines do.>
 
@@ -246,9 +293,8 @@ Bullets after each block explain what the changed lines do.>
 - 확인하지 못하는 것: <what the tests cannot observe>
 
 ### 문제점
-<Omit when the unit has no findings. Each finding:>
 
-**<결과>: <원인> (<수정 필요 | 확인 필요 | 사소함>, <신규 | 리뷰 코멘트: author, path:line, 미해결 | 해결됨>)**
+**<결과>: <원인> (<수정 필요 | 확인 필요>, <신규 | 리뷰 코멘트: author, path:line, 미해결 | 해결됨>)**
 
 - 위치: `path:line` (`function()`)
 
@@ -262,10 +308,9 @@ one, at most two, never a tutorial.>
 **그래서 생기는 일.** <The defect itself, now that the reader has the pieces.
 Plain sentences, no new names.>
 
-**실패 시나리오.** <A table in time order, one row per event, with a last
-column showing the state that matters (a mask, a flag, a level). A numbered
-list is fine when there is no state to track, but the table is clearer
-whenever one value explains the whole thing.>
+**실패 시나리오.** <A table in time order, three or four rows, one row per
+event, with a last column showing the state that matters (a mask, a flag, a
+level). A numbered list is fine when there is no state to track.>
 
 | 시각 | 사건 | <state> |
 |---|---|---|
@@ -278,10 +323,9 @@ often that some other code already depends on the current shape.>
 
 <Title: keep it to "결과: 원인", short enough to read at a glance, e.g.
 `서스펜드 실패: 타임아웃 슬롯이 드레인 전에 정리되지 않음`. Never pack the
-whole mechanism into the title. Do not cram the reasoning into one long
-bullet: split it across 무엇이 / 왜 / 실패 순서 / 수정 방법.>
+whole mechanism into the title.>
 
-<If an existing thread raised or discusses this finding, paste its block here.>
+<If an open thread raised or discusses this finding, paste its block here.>
 
 > [!tip] 추천 코멘트 · `path:line`
 > <English Gerrit comment, polite, ending with a question or concrete
@@ -313,30 +357,23 @@ bullet: split it across 무엇이 / 왜 / 실패 순서 / 수정 방법.>
 ---
 
 ## 커밋 메시지 부정확
-<Claims in the message that do not match the diff or base code, with 추천 코멘트.>
+<Only when a claim in the message does not match the diff or base code. Each
+one in a sentence or two, with 추천 코멘트.>
 
 ---
 
 ## 전체 답글과 투표
-<Patchset-level threads from comments_md.py, then the reply draft as
-`> [!tip] 우리 답글 초안` with the English reply and its `**번역:**` line
-inside, then 추천 투표 with reason.>
+<Open patchset-level threads from comments_md.py, then the reply draft as
+`> [!tip] 우리 답글 초안` with an English reply of two to four sentences and
+its `**번역:**` line inside, then one line with 추천 투표.>
 
 ---
 
-## 부록
-### 파일별 변경 위치
-<one table per unit: 파일 | 위치(new-side lines) | 변경>
-### 겹치는 함수의 흐름
-<only for functions touched by 2+ units: 행 | 동작 | 단위>
-### 용어
-<only abbreviations the file uses: 용어 | 뜻, one line each>
-### 확인하지 못한 것
-<anything that needs hardware, internal code, or the author's intent>
+## 확인하지 못한 것
+<At most five bullets: what needs hardware, internal code, or the author's
+intent, and would change the verdict if it turned out otherwise. Omit when
+there is none.>
 ````
-
-Heading anchors follow GitHub rules: lowercase, drop punctuation except `-`,
-spaces become `-`. Example: `## 단위 1: init 리스` becomes `#단위-1-init-리스`.
 
 ## Step 4: Check and record
 
@@ -349,12 +386,18 @@ spaces become `-`. Example: `## 단위 1: init 리스` becomes `#단위-1-init-�
    # branch mode: checks each unit against its own commit
    python3 ~/.claude/skills/code-review-support/scripts/check_units.py <file> <work> <repo>
    ```
-2. Add to `<context>` every fact verified in this review that a later review
+2. Run the length checker and cut until it reports `0 problem(s)`. Cut by
+   removing whole points that do not change the verdict. Do not shorten by
+   dropping particles, stacking nouns, or moving prose into tables and boxes.
+   ```bash
+   python3 ~/.claude/skills/code-review-support/scripts/check_len.py <file>
+   ```
+3. Add to `<context>` every fact verified in this review that a later review
    would need: framework semantics, spec rules, hardware facts, commit that
    introduced a behavior, reviewer ownership. One bullet each with its source
    and `확인: CL <number>`. If a fact turned out wrong, correct it in place and
    mark it 정정. Create `<context>` with a one-paragraph header if missing.
-3. Reply in the terminal with the file path, the verdict in plain words (what
+4. Reply in the terminal with the file path, the verdict in plain words (what
    the CL does and the vote), and at most the top two findings with their
    comments. Keep it to a few short lines. Do not paste the whole review.
 
@@ -365,7 +408,7 @@ spaces become `-`. Example: `## 단위 1: init 리스` becomes `#단위-1-init-�
 | "번역만" | Step 1, then print the original and translated commit message. For a pull request, the PR description first, then each commit message |
 | "리뷰해줘" / URL only | Steps 1-4 |
 | "새 패치셋 올라왔어" / re-review | Steps 1-4 with `--since <old ps>`, new file for the new patchset |
-| "왜 고친 거야?" | Expand each unit's 문제 상황 and 해결 방법 in the existing file, then summarize |
+| "왜 고친 거야?" / "단위 N 자세히" | Rewrite the units asked about as full chapters in the existing file (all units when none is named), then summarize. Units expanded on request are exempt from `check_len.py` |
 | "코멘트 올려줘" | Show the 추천 코멘트 blocks and ask before posting anything |
 | "이 브랜치 커밋들 리뷰해줘" / "커밋별로 설명해줘" | Branch mode (`references/branch-mode.md`), Steps 2-4 |
 | Branch changed since the last review | Branch mode with `git range-diff`, fill 이전 리뷰 대비 |
@@ -375,8 +418,13 @@ spaces become `-`. Example: `## 단위 1: init 리스` becomes `#단위-1-init-�
 | Mistake | Fix |
 |---|---|
 | Explaining the diff hunk by hunk | Group hunks by fix unit first |
+| A full chapter for a unit with no finding, or a 배경 and 실패 시나리오 for a 사소함 finding | Compact chapter: one paragraph and one 확인 line, one paragraph per minor finding (`check_len.py` flags it) |
+| Quoting resolved threads with translations | One row in 기존 리뷰 코멘트 with where the fix landed. Quote only open threads (`comments_md.py --open`) |
+| Listing everything that was verified | Write what the reader needs for the verdict. Facts a later review needs go to `<context>` |
+| An appendix of file/line maps and a glossary | Neither exists. Explain a term where it first appears |
+| Meeting the budget by compressing sentences | Remove points instead. Keep full sentences |
 | A summary full of identifiers and side detail | Lead with what the CL does in everyday words and cut detail that does not change the verdict (Write plainly) |
-| Jumping from 문제 상황 straight into diff blocks | Write 해결 방법 in prose first, so the diff only confirms it |
+| Jumping from 문제 상황 straight into diff blocks (full chapter) | Write 해결 방법 in prose first, so the diff only confirms it |
 | A finding only a reader of the diff can follow | Add 배경 paragraphs for the prerequisites, then state the defect (rule 7a) |
 | 실패 시나리오 as prose when one value drives it | Use the timeline table with a state column |
 | Leaving the obvious alternative fix unaddressed | Say why it fails; some other code often depends on the current order |
@@ -394,5 +442,5 @@ spaces become `-`. Example: `## 단위 1: init 리스` becomes `#단위-1-init-�
 | A pull request review with the commit messages translated but not the PR description | Add PR 설명 원문과 번역 (`references/branch-mode.md`) |
 | An English 추천 코멘트 or 우리 답글 초안 without a Korean translation | Add `> **번역:** ...` inside the same box (see Boxes) |
 | Marking an unchanged or moved line `+` | Copy the markers from the real diff (checker flags it) |
-| A finding title that tells the whole story, or one 근거 bullet holding every reason and line number | Title is `결과: 원인`. Split the body into 무엇이 / 왜 / 실패 순서 (numbered) / 수정 방법, and push identifiers and line numbers to trailing parentheses |
-| Branch review line numbers from the range end | Use the unit's own commit; appendix tables under `#### 단위 N` |
+| A finding title that tells the whole story, or one 근거 bullet holding every reason and line number | Title is `결과: 원인`. In a full chapter split the body into 배경 / 그래서 생기는 일 / 실패 시나리오 / 수정, and push identifiers and line numbers to trailing parentheses |
+| Branch review line numbers from the range end | Use the unit's own commit |

@@ -7,8 +7,7 @@ Line numbers in a branch review belong to the commit a unit describes, so each
 part of the file is checked against its own folder:
 
   * from a "## 단위 N" heading until the next heading of level 2 or higher,
-    and from a "#### 단위 N" heading (a table for that unit placed outside
-    its chapter) until the next
+    and from a "#### 단위 N" heading (the appendix tables) until the next
     heading of level 4 or higher, against <work>/cN
   * everything else, against <work>/all (the whole range)
 

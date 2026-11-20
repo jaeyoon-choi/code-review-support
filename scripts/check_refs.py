@@ -10,6 +10,9 @@ Checks, against the base/ and new/ files written by fetch_cl.sh:
     the base file, and context lines exist in either, near the cited line
   * when change.patch is present, a `+` line is one the change adds and a `-`
     line is one it removes, so an unchanged or moved line is not marked as new
+  * no `<name>` appears outside code. Markdown reads it as an HTML tag and
+    hides it, often with the rest of the line, as happens to a generic type such
+    as Foo<M> written without backticks
 A diff line that is exactly "..." (optionally indented) marks elided code and is
 skipped. Anything else that is not real code is reported.
 Exit status is 1 when a problem is found.
@@ -32,6 +35,28 @@ def load(path):
 
 def norm(s):
     return " ".join(s.split())
+
+
+TAG = re.compile(r"<!--|</?[A-Za-z][\w-]*(?:\s[^<>]*)?/?>")
+
+
+def raw_html(text):
+    """`<name>` or `<!--` outside code fences and inline code, with line numbers."""
+    problems, fence = [], False
+    for n, line in enumerate(text.splitlines(), 1):
+        body = re.sub(r"^(?:>\s?)*", "", line)
+        if body.lstrip().startswith("```"):
+            fence = not fence
+            continue
+        if fence:
+            continue
+        for m in TAG.finditer(re.sub(r"`[^`]*`", "", body)):
+            if m.group(0) == "<!--":
+                problems.append(f"line {n}: HTML comment or leftover cut mark; remove it")
+            else:
+                problems.append(f"line {n}: `{m.group(0)[:40]}` outside code is read as an HTML tag; "
+                                "wrap the identifier in backticks")
+    return problems
 
 
 def patch_lines(path):
@@ -81,7 +106,7 @@ def main():
         n = len(out.stdout.splitlines())
         return None if 1 <= lo and hi <= n else f"ref `{name}:{lo}-{hi}`: beyond end of {hits[0]} ({n} lines)"
     text = review.read_text(encoding="utf-8")
-    problems = []
+    problems = raw_html(text)
     changed = patch_lines(work / "change.patch")
 
     def resolve(name):

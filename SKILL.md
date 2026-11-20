@@ -380,7 +380,10 @@ there is none.>
 1. Run the quote checker and fix every problem it prints, then rerun until it
    reports `0 problem(s)`. Besides checking that quoted lines exist, it flags a
    `+` or `-` line that the change does not actually add or remove, which is
-   how an unchanged line copied into a diff block gets caught.
+   how an unchanged line copied into a diff block gets caught. It also flags a
+   `<name>` outside code, such as `Foo<M>` written without backticks in the
+   commit message translation, because markdown reads it as an HTML tag and
+   hides the rest of the line.
    ```bash
    python3 ~/.claude/skills/code-review-support/scripts/check_refs.py <file> <work> <repo>
    # branch mode: checks each unit against its own commit

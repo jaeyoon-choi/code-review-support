@@ -111,8 +111,8 @@ unit, and what gets written down is set by the unit's worst finding:
 | 확인 필요 or 수정 필요 | Full: 문제 상황, 해결 방법, 변경 코드, 테스트, 문제점 | 350 + 200 per such finding |
 
 Prose is the text outside code blocks, boxes, tables, headings and the commit
-message. 판정 요약 has 100 words of prose, 전체 그림 has 150, and 확인하지
-못한 것 has 120.
+message. 판정 요약 has 100 words of prose, 전체 그림 has 150, Rust 문법 has
+30 (its table is not counted), and 확인하지 못한 것 has 120.
 `check_len.py` (Step 4) counts each section against these numbers. A compact
 chapter has no diff block and no 문제 상황, 해결 방법 or 테스트 heading. What
 Step 2 verified but the chapter does not show stays in `<context>` when a later
@@ -157,6 +157,19 @@ Explain each term in a short phrase where it first appears, since the file has
 no glossary. Leave out how the change was fetched, alternatives nobody would
 propose, and spec cross-references that do not change the verdict.
 
+**Explain the Rust syntax.** The reader writes C and C++ drivers and does not
+read Rust fluently. When the change touches Rust, add `## Rust 문법` before the
+first unit: one table row for each Rust feature that the diff, the quoted
+code, a reviewer comment or this review's argument relies on, in the order the
+reader meets them. Say what the feature does in plain Korean and name the C or
+C++ counterpart when one exists (`&mut T` is a pointer the compiler guarantees
+no one else uses at the same time, `impl X { ... }` adds member functions to
+`X`, `'a` names how long a reference is valid). Skip what a C programmer
+reads correctly unaided (`let`, `if`, plain function signatures), and keep it
+to about ten rows. When a finding rests on a language rule (borrow checking,
+lifetimes, `Drop` order, `Send` and `Sync`), state that rule again in one
+sentence where the finding uses it.
+
 Scale the shape to the change:
 
 | Change | Shape |
@@ -165,6 +178,7 @@ Scale the shape to the change:
 | 1 fix unit | Drop the 판정 요약 table (keep the sentences). Use `## 변경 내용` instead of `## 단위 1: ...`, with the same compact or full rule |
 | No comment threads yet | Drop 기존 리뷰 코멘트 |
 | Earlier review exists (`--since`) | Add `## 이전 리뷰 대비` right after 판정 요약 |
+| Change touches Rust code | Add `## Rust 문법` right before the first unit |
 
 ````markdown
 # CL <number> 리뷰: <subject>
@@ -236,6 +250,20 @@ One paragraph: the scale in numbers, which component owns what, and one
 end-to-end walk with real values (an actual LBA, an actual register write).
 Then one table, either the pieces and their owners or what this change covers
 and what is left for later changes.>
+
+---
+
+## Rust 문법
+
+<Only when the change touches Rust (see Explain the Rust syntax). One sentence
+at most, then:>
+
+| 문법 | 뜻 | 이 CL에서 |
+|---|---|---|
+<문법 is the syntax as written in code (`impl<M: Mmio> Foo<'_, M>`, `&mut self`,
+`#[cfg(test)]`). 뜻 is one or two plain sentences with the C or C++
+counterpart. 이 CL에서 says where it appears and what it does there, with
+`path:line`.>
 
 ---
 
@@ -424,7 +452,8 @@ there is none.>
 | A full chapter for a unit with no finding, or a 배경 and 실패 시나리오 for a 사소함 finding | Compact chapter: one paragraph and one 확인 line, one paragraph per minor finding (`check_len.py` flags it) |
 | Quoting resolved threads with translations | One row in 기존 리뷰 코멘트 with where the fix landed. Quote only open threads (`comments_md.py --open`) |
 | Listing everything that was verified | Write what the reader needs for the verdict. Facts a later review needs go to `<context>` |
-| An appendix of file/line maps and a glossary | Neither exists. Explain a term where it first appears |
+| An appendix of file/line maps and a glossary | Neither exists. Explain a term where it first appears. `## Rust 문법` explains language syntax only, never project terms |
+| A Rust review that assumes the reader knows lifetimes, borrows and traits | Add `## Rust 문법` with the C or C++ counterpart of each feature (Explain the Rust syntax) |
 | Meeting the budget by compressing sentences | Remove points instead. Keep full sentences |
 | A summary full of identifiers and side detail | Lead with what the CL does in everyday words and cut detail that does not change the verdict (Write plainly) |
 | Jumping from 문제 상황 straight into diff blocks (full chapter) | Write 해결 방법 in prose first, so the diff only confirms it |

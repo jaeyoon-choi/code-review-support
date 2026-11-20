@@ -111,8 +111,8 @@ unit, and what gets written down is set by the unit's worst finding:
 | 확인 필요 or 수정 필요 | Full: 문제 상황, 해결 방법, 변경 코드, 테스트, 문제점 | 350 + 200 per such finding |
 
 Prose is the text outside code blocks, boxes, tables, headings and the commit
-message. 판정 요약 has 100 words of prose, 전체 그림 has 150, Rust 문법 has
-30 (its table is not counted), and 확인하지 못한 것 has 120.
+message. 판정 요약 has 100 words of prose, 변경 목적과 필요성 has 150, 전체
+그림 has 150, Rust 문법 has 900, and 확인하지 못한 것 has 120.
 `check_len.py` (Step 4) counts each section against these numbers. A compact
 chapter has no diff block and no 문제 상황, 해결 방법 or 테스트 heading. What
 Step 2 verified but the chapter does not show stays in `<context>` when a later
@@ -157,18 +157,29 @@ Explain each term in a short phrase where it first appears, since the file has
 no glossary. Leave out how the change was fetched, alternatives nobody would
 propose, and spec cross-references that do not change the verdict.
 
-**Explain the Rust syntax.** The reader writes C and C++ drivers and does not
+**Say why the commit exists.** Right after the commit message, `## 변경 목적과
+필요성` says in two short paragraphs what the commit changes, what goes wrong
+or stays awkward without it, and why it is needed now: the bug, the reviewer
+request, or the later change that needs it. Look for the origin before
+writing: the commit message, the bug, and the comment threads of related CLs
+(`/changes/<n>/comments` on the parent and child CLs), where an author often
+answers "Done in a separate change". Tag a point taken from another CL's
+thread as `(리뷰 코멘트: <author>, CL <n> <path> N행, <미해결 | 해결됨>)`.
+
+**Teach the Rust syntax.** The reader writes C and C++ drivers and does not
 read Rust fluently. When the change touches Rust, add `## Rust 문법` before the
-first unit: one table row for each Rust feature that the diff, the quoted
-code, a reviewer comment or this review's argument relies on, in the order the
-reader meets them. Say what the feature does in plain Korean and name the C or
-C++ counterpart when one exists (`&mut T` is a pointer the compiler guarantees
-no one else uses at the same time, `impl X { ... }` adds member functions to
-`X`, `'a` names how long a reference is valid). Skip what a C programmer
-reads correctly unaided (`let`, `if`, plain function signatures), and keep it
-to about ten rows. When a finding rests on a language rule (borrow checking,
-lifetimes, `Drop` order, `Send` and `Sync`), state that rule again in one
-sentence where the finding uses it.
+first unit and write it as a short lecture, not a table. Use numbered `###`
+subsections ordered so that each one uses only what came before: types and
+`impl` blocks with module privacy, references and borrow checking, generics
+and traits, lifetimes, then whatever else the change uses (`Arc`, `async` and
+`.await`, `?`, macros, `#[cfg]`, closures, `Drop`, `Send` and `Sync`). In each
+subsection, state the rule in plain Korean, give the C or C++ counterpart,
+show a few real lines from the change in a ```rust block, and say what those
+lines do here and what the compiler would reject if they were written another
+way. Cover only what the diff, the quoted code, reviewer comments or this
+review's argument rely on, and skip what a C programmer reads correctly
+unaided (`let`, `if`, plain function signatures). When a finding rests on a
+language rule, point back to its subsection where the finding uses it.
 
 Scale the shape to the change:
 
@@ -227,6 +238,16 @@ one or two sentences on what was exercised. Then:>
 
 ---
 
+## 변경 목적과 필요성
+
+<Two short paragraphs (see Say why the commit exists). First: what was wrong
+or awkward in the base code, as a reader who has not seen it would need to
+hear it, and how bad it is today. Second: what this commit does about it and
+where the request came from (bug, review thread on this or a related CL, or
+the later CL that needs it), with the source.>
+
+---
+
 ## 기존 리뷰 코멘트
 
 <Omit when there are no comment threads. One sentence with thread and
@@ -255,15 +276,19 @@ and what is left for later changes.>
 
 ## Rust 문법
 
-<Only when the change touches Rust (see Explain the Rust syntax). One sentence
-at most, then:>
+<Only when the change touches Rust (see Teach the Rust syntax). One or two
+sentences on why the reader needs it, then a lecture:>
 
-| 문법 | 뜻 | 이 CL에서 |
-|---|---|---|
-<문법 is the syntax as written in code (`impl<M: Mmio> Foo<'_, M>`, `&mut self`,
-`#[cfg(test)]`). 뜻 is one or two plain sentences with the C or C++
-counterpart. 이 CL에서 says where it appears and what it does there, with
-`path:line`.>
+### 1. <noun phrase, e.g. 구조체와 `impl` 블록>
+
+<The rule in plain Korean and its C or C++ counterpart, one paragraph.>
+
+```rust
+<a few real lines from the change, `...` for elided lines>
+```
+
+<What these lines do in this change, and what the compiler would reject if
+they were written another way. Cite `path:line`.>
 
 ---
 
@@ -453,7 +478,9 @@ there is none.>
 | Quoting resolved threads with translations | One row in 기존 리뷰 코멘트 with where the fix landed. Quote only open threads (`comments_md.py --open`) |
 | Listing everything that was verified | Write what the reader needs for the verdict. Facts a later review needs go to `<context>` |
 | An appendix of file/line maps and a glossary | Neither exists. Explain a term where it first appears. `## Rust 문법` explains language syntax only, never project terms |
-| A Rust review that assumes the reader knows lifetimes, borrows and traits | Add `## Rust 문법` with the C or C++ counterpart of each feature (Explain the Rust syntax) |
+| A Rust review that assumes the reader knows lifetimes, borrows and traits | Add `## Rust 문법` (Teach the Rust syntax) |
+| Rust syntax as a table of features | Teach it as a lecture: numbered subsections, each with the rule, its C or C++ counterpart, and real lines from the change |
+| A review that never says why the commit was written | Add `## 변경 목적과 필요성` after the commit message, with the bug or the review thread that asked for it |
 | Meeting the budget by compressing sentences | Remove points instead. Keep full sentences |
 | A summary full of identifiers and side detail | Lead with what the CL does in everyday words and cut detail that does not change the verdict (Write plainly) |
 | Jumping from 문제 상황 straight into diff blocks (full chapter) | Write 해결 방법 in prose first, so the diff only confirms it |
